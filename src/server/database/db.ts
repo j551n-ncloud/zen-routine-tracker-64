@@ -74,13 +74,12 @@ export function execute(db: Database.Database, sql: string, params: Record<strin
   }
 }
 
-// Begin a transaction
+// Begin a transaction with a callback
 export function transaction<T>(db: Database.Database, cb: (db: Database.Database) => T): T {
-  // Create transaction function with the callback
-  const transactionFn = db.transaction(() => {
+  const transactionFn = db.transaction((db: Database.Database) => {
     return cb(db);
   });
   
   // Execute the transaction
-  return transactionFn();
+  return transactionFn(db);
 }

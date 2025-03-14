@@ -23,7 +23,7 @@ export function createTasksRouter(db: Database.Database) {
   router.use(authenticate);
   
   // Get all tasks for current user
-  router.get('/', async (req: AuthRequest, res: Response) => {
+  router.get('/', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -41,7 +41,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Get a specific task
-  router.get('/:id', async (req: AuthRequest, res: Response) => {
+  router.get('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const taskId = parseInt(req.params.id);
     
@@ -63,7 +63,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Create a new task
-  router.post('/', async (req: AuthRequest, res: Response) => {
+  router.post('/', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -102,7 +102,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Update a task
-  router.put('/:id', async (req: AuthRequest, res: Response) => {
+  router.put('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const taskId = parseInt(req.params.id);
     
@@ -153,7 +153,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Delete a task
-  router.delete('/:id', async (req: AuthRequest, res: Response) => {
+  router.delete('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const taskId = parseInt(req.params.id);
     

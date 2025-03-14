@@ -29,7 +29,7 @@ export function createHabitsRouter(db: Database.Database) {
   router.use(authenticate);
   
   // Get all habits for current user
-  router.get('/', async (req: AuthRequest, res: Response) => {
+  router.get('/', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -47,7 +47,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Get a specific habit with its completions
-  router.get('/:id', async (req: AuthRequest, res: Response) => {
+  router.get('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -80,7 +80,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Create a new habit
-  router.post('/', async (req: AuthRequest, res: Response) => {
+  router.post('/', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -117,7 +117,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Update a habit
-  router.put('/:id', async (req: AuthRequest, res: Response) => {
+  router.put('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -168,7 +168,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Delete a habit
-  router.delete('/:id', async (req: AuthRequest, res: Response) => {
+  router.delete('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -197,7 +197,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Mark a habit as complete for a date
-  router.post('/:id/complete', async (req: AuthRequest, res: Response) => {
+  router.post('/:id/complete', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -221,7 +221,7 @@ export function createHabitsRouter(db: Database.Database) {
     }
     
     try {
-      return transaction(db, (database) => {
+      const result = transaction(db, (database) => {
         // Check if already completed for this date
         const existingCompletion = queryOne<HabitCompletion>(database, `
           SELECT id FROM habit_completions 
@@ -237,7 +237,7 @@ export function createHabitsRouter(db: Database.Database) {
           `, { id: existingCompletion.id, notes: notes || null });
           
           const completion = queryOne<HabitCompletion>(database, 'SELECT * FROM habit_completions WHERE id = :id', { id: existingCompletion.id });
-          return res.json(completion);
+          return completion;
         } else {
           // Create new completion
           execute(database, `
@@ -246,13 +246,15 @@ export function createHabitsRouter(db: Database.Database) {
           `, { habitId, date, notes: notes || null });
           
           // Get the inserted completion
-          const result = database.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
-          const completionId = result.id;
+          const insertResult = database.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
+          const completionId = insertResult.id;
           const completion = queryOne<HabitCompletion>(database, 'SELECT * FROM habit_completions WHERE id = :id', { id: completionId });
           
-          return res.status(201).json(completion);
+          return completion;
         }
       });
+      
+      return res.status(201).json(result);
     } catch (error) {
       console.error('Error completing habit:', error);
       return res.status(500).json({ error: 'Failed to complete habit' });
@@ -260,7 +262,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Remove a habit completion
-  router.delete('/:id/complete/:date', async (req: AuthRequest, res: Response) => {
+  router.delete('/:id/complete/:date', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     const date = req.params.date;

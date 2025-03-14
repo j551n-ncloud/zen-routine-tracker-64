@@ -9,7 +9,7 @@ export function createUsersRouter(db: Database.Database) {
   const router = Router();
   
   // Get current user profile
-  router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
+  router.get('/me', authenticate, (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -26,7 +26,7 @@ export function createUsersRouter(db: Database.Database) {
   });
   
   // Admin only: Get all users
-  router.get('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
+  router.get('/', authenticate, requireAdmin, (req: AuthRequest, res: Response) => {
     const users = query<User>(db, `
       SELECT id, username, is_admin, created_at, updated_at
       FROM users
