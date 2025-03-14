@@ -10,7 +10,7 @@ export function createAuthRouter(db: Database.Database) {
   const router = Router();
   
   // Login route
-  router.post('/login', (req, res) => {
+  router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
@@ -47,7 +47,7 @@ export function createAuthRouter(db: Database.Database) {
   });
   
   // Register route
-  router.post('/register', (req, res) => {
+  router.post('/register', async (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
