@@ -1,9 +1,11 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
-import { supabase } from '../services/supabase-service';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 // Define types
 export interface User {
+  id: number;
   username: string;
   isAdmin: boolean;
 }
@@ -30,23 +32,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setIsLoading(true);
         
-        // Check if user is already logged in with Supabase
-        const { data: { session } } = await supabase.auth.getSession();
+        // Check for token in localStorage
+        const token = localStorage.getItem('authToken');
         
-        if (session?.user) {
-          // Get user details from Supabase
-          const { data, error } = await supabase
-            .from('users')
-            .select('username, is_admin')
-            .eq('user_id', session.user.id)
-            .single();
-            
-          if (!error && data) {
-            setUser({
-              username: data.username,
-              isAdmin: !!data.is_admin
+        if (token) {
+          // Validate token with backend
+          try {
+            const response = await axios.get('/api/users/me', {
+              headers: { Authorization: `Bearer ${token}` }
             });
-            console.log("User loaded from Supabase session:", data.username);
+            
+            if (response.data) {
+              setUser(response.data);
+              console.log("User loaded from token:", response.data.username);
+            }
+          } catch (error) {
+            console.error("Invalid token:", error);
+            localStorage.removeItem('authToken');
           }
         }
       } catch (error) {
@@ -59,95 +61,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initialize();
   }, []);
   
-  // Updated login function - Auto create users
+  // Login function
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const email = `${username}@example.com`; // For demo purposes
-      
-      // Step 1: Try to sign up the user first (will fail silently if already exists)
-      try {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-        });
-        
-        if (signUpError) {
-          console.log("User already exists or signup error:", signUpError);
-          // Continue to login attempt regardless of the error
-        } else {
-          console.log("New user signed up:", email);
-          // Give Supabase a moment to process the new user
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      } catch (signUpError) {
-        // Ignore the error and proceed to login
-        console.log("Sign up attempt error (ignored):", signUpError);
-      }
-      
-      // Step 2: Now attempt to sign in
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+      const response = await axios.post('/api/auth/login', { 
+        username, 
+        password 
       });
       
-      if (error || !data.user) {
-        toast.error("Invalid username or password");
-        console.error("Login error details:", error);
-        return false;
-      }
+      const { user, token } = response.data;
       
-      // Step 3: Get user details from users table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('username, is_admin')
-        .eq('user_id', data.user.id)
-        .single();
+      if (user && token) {
+        // Save token to localStorage
+        localStorage.setItem('authToken', token);
         
-      if (userError || !userData) {
-        // If user record not found in users table, create one
-        const newUser = {
-          user_id: data.user.id,
-          username: username,
-          is_admin: username.toLowerCase() === 'admin' ? true : false
-        };
+        // Set user in state
+        setUser(user);
         
-        await supabase.from('users').insert(newUser);
-        
-        const authenticatedUser = {
-          username: username,
-          isAdmin: username.toLowerCase() === 'admin'
-        };
-        
-        setUser(authenticatedUser);
-        toast.success(`Welcome, ${authenticatedUser.username}!`);
+        toast.success(`Welcome, ${user.username}!`);
         return true;
       }
       
-      // Set authenticated user from database
-      const authenticatedUser = {
-        username: userData.username,
-        isAdmin: !!userData.is_admin
-      };
-      
-      setUser(authenticatedUser);
-      toast.success(`Welcome back, ${authenticatedUser.username}!`);
-      return true;
-    } catch (error) {
+      return false;
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast.error("Login failed. Please try again.");
+      
+      if (error.response?.status === 401) {
+        toast.error("Invalid username or password");
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+      
       return false;
     }
   };
   
   // Logout function
-  const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      toast.success("You've been logged out");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+  const logout = () => {
+    // Remove token from localStorage
+    localStorage.removeItem('authToken');
+    
+    // Clear user from state
+    setUser(null);
+    
+    toast.success("You've been logged out");
   };
   
   const value = {

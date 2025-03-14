@@ -55,7 +55,7 @@ const Login: React.FC = () => {
             <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
               <Info className="h-4 w-4 text-blue-500 dark:text-blue-400" />
               <AlertDescription className="text-sm text-blue-700 dark:text-blue-300">
-                Default admin credentials: <span className="font-semibold">admin / admin123</span>
+                Default admin credentials: <span className="font-semibold">admin / admin</span>
               </AlertDescription>
             </Alert>
             
@@ -82,7 +82,7 @@ const Login: React.FC = () => {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              For demo: use admin/admin123 or any matching username/password
+              For demo: use admin/admin or register a new account
             </p>
           </CardContent>
           <CardFooter>

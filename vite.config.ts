@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => ({
     host: true, // Listen on all addresses
     port: 8080,
     cors: true,
+    proxy: {
+      // Proxy API requests to our Express backend during development
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
+    },
     allowedHosts: [
       'habit.j551n.com', // Add the allowed host here
       'localhost',
