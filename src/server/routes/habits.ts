@@ -1,5 +1,5 @@
 
-import { Router } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import Database from 'better-sqlite3';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { query, queryOne, execute, transaction } from '../database/db';
@@ -29,7 +29,7 @@ export function createHabitsRouter(db: Database.Database) {
   router.use(authenticate);
   
   // Get all habits for current user
-  router.get('/', async (req: AuthRequest, res) => {
+  router.get('/', async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -47,7 +47,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Get a specific habit with its completions
-  router.get('/:id', async (req: AuthRequest, res) => {
+  router.get('/:id', async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -80,7 +80,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Create a new habit
-  router.post('/', async (req: AuthRequest, res) => {
+  router.post('/', async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -117,7 +117,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Update a habit
-  router.put('/:id', async (req: AuthRequest, res) => {
+  router.put('/:id', async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -168,7 +168,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Delete a habit
-  router.delete('/:id', async (req: AuthRequest, res) => {
+  router.delete('/:id', async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -197,7 +197,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Mark a habit as complete for a date
-  router.post('/:id/complete', async (req: AuthRequest, res) => {
+  router.post('/:id/complete', async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     
@@ -260,7 +260,7 @@ export function createHabitsRouter(db: Database.Database) {
   });
   
   // Remove a habit completion
-  router.delete('/:id/complete/:date', async (req: AuthRequest, res) => {
+  router.delete('/:id/complete/:date', async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const habitId = parseInt(req.params.id);
     const date = req.params.date;
