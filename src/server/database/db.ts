@@ -76,5 +76,5 @@ export function execute(db: Database.Database, sql: string, params: Record<strin
 
 // Begin a transaction
 export function transaction<T>(db: Database.Database, cb: (db: Database.Database) => T): T {
-  return db.transaction((_) => cb(db))();
+  return db.transaction((transactionDb) => cb(db))();
 }

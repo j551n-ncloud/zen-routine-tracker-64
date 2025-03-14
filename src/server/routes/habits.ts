@@ -105,7 +105,8 @@ export function createHabitsRouter(db: Database.Database) {
       });
       
       // Get the inserted habit
-      const habitId = db.prepare('SELECT last_insert_rowid() as id').get().id;
+      const result = db.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
+      const habitId = result.id;
       const habit = queryOne<Habit>(db, 'SELECT * FROM habits WHERE id = :habitId', { habitId });
       
       return res.status(201).json(habit);
@@ -245,7 +246,8 @@ export function createHabitsRouter(db: Database.Database) {
           `, { habitId, date, notes: notes || null });
           
           // Get the inserted completion
-          const completionId = database.prepare('SELECT last_insert_rowid() as id').get().id;
+          const result = database.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
+          const completionId = result.id;
           const completion = queryOne<HabitCompletion>(database, 'SELECT * FROM habit_completions WHERE id = :id', { id: completionId });
           
           return res.status(201).json(completion);

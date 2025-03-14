@@ -90,7 +90,8 @@ export function createTasksRouter(db: Database.Database) {
       });
       
       // Get the inserted task
-      const taskId = db.prepare('SELECT last_insert_rowid() as id').get().id;
+      const result = db.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
+      const taskId = result.id;
       const task = queryOne<Task>(db, 'SELECT * FROM tasks WHERE id = :taskId', { taskId });
       
       return res.status(201).json(task);
