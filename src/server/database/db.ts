@@ -76,8 +76,11 @@ export function execute(db: Database.Database, sql: string, params: Record<strin
 
 // Begin a transaction
 export function transaction<T>(db: Database.Database, cb: (db: Database.Database) => T): T {
-  const transactionFn = db.transaction((transactionDb) => {
+  // Create transaction function with the callback
+  const transactionFn = db.transaction(() => {
     return cb(db);
   });
+  
+  // Execute the transaction
   return transactionFn();
 }
