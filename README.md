@@ -59,8 +59,9 @@ ZenTracker is a full-stack web application for managing tasks and habits, built 
 
 The application uses SQLite as its database, which stores all data in a file:
 
-- In Docker: Data is stored in a volume at `./data` on your host machine
-- In development: Data is stored in the `data` directory in the project root
+- **Automatic Database Creation**: The SQLite database file is automatically created when the application first starts
+- **Docker Persistence**: Data is stored in a volume at `./data` on your host machine
+- **Development Mode**: Data is stored in the `data` directory in the project root
 
 This ensures your data persists between container restarts and updates.
 
@@ -72,7 +73,7 @@ This ensures your data persists between container restarts and updates.
 
 ## Default User
 
-On first startup, the system creates a default admin user:
+On first startup, the system automatically creates a default admin user:
 - Username: `admin`
 - Password: `admin`
 
