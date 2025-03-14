@@ -1,14 +1,14 @@
 
-import { Router, Response } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import Database from 'better-sqlite3';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
-import { query, queryOne } from '../database/db';
+import { getUserById } from '../database/users';
 import { User } from './types';
 
 export function createUsersRouter(db: Database.Database) {
   const router = Router();
   
-  // Get current user profile
+  // Get current user
   router.get('/me', authenticate, (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
@@ -16,22 +16,20 @@ export function createUsersRouter(db: Database.Database) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    const user = queryOne<User>(db, `
-      SELECT id, username, is_admin, created_at, updated_at
-      FROM users
-      WHERE id = :userId
-    `, { userId });
+    const user = getUserById(db, userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     
     return res.json(user);
   });
   
-  // Admin only: Get all users
+  // Get all users (admin only)
   router.get('/', authenticate, requireAdmin, (req: AuthRequest, res: Response) => {
-    const users = query<User>(db, `
-      SELECT id, username, is_admin, created_at, updated_at
-      FROM users
-      ORDER BY username
-    `);
+    // This should only be accessible to admin users
+    
+    const users = db.prepare('SELECT id, username, is_admin, created_at, updated_at FROM users').all() as User[];
     
     return res.json(users);
   });

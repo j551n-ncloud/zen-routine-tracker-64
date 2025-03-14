@@ -39,9 +39,9 @@ export function createHabitsRouter(db: Database.Database) {
     const habits = query<Habit>(db, `
       SELECT id, user_id, name, description, is_active, created_at, updated_at
       FROM habits
-      WHERE user_id = :userId
+      WHERE user_id = ?
       ORDER BY name
-    `, { userId });
+    `, [userId]);
     
     return res.json(habits);
   });
@@ -58,8 +58,8 @@ export function createHabitsRouter(db: Database.Database) {
     const habit = queryOne<Habit>(db, `
       SELECT id, user_id, name, description, is_active, created_at, updated_at
       FROM habits
-      WHERE id = :habitId AND user_id = :userId
-    `, { habitId, userId });
+      WHERE id = ? AND user_id = ?
+    `, [habitId, userId]);
     
     if (!habit) {
       return res.status(404).json({ error: 'Habit not found' });
@@ -69,9 +69,9 @@ export function createHabitsRouter(db: Database.Database) {
     const completions = query<HabitCompletion>(db, `
       SELECT id, habit_id, completed_date, notes, created_at
       FROM habit_completions
-      WHERE habit_id = :habitId
+      WHERE habit_id = ?
       ORDER BY completed_date DESC
-    `, { habitId });
+    `, [habitId]);
     
     return res.json({
       ...habit,
@@ -97,17 +97,13 @@ export function createHabitsRouter(db: Database.Database) {
     try {
       execute(db, `
         INSERT INTO habits (user_id, name, description)
-        VALUES (:userId, :name, :description)
-      `, {
-        userId,
-        name,
-        description: description || null
-      });
+        VALUES (?, ?, ?)
+      `, [userId, name, description || null]);
       
       // Get the inserted habit
       const result = db.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
       const habitId = result.id;
-      const habit = queryOne<Habit>(db, 'SELECT * FROM habits WHERE id = :habitId', { habitId });
+      const habit = queryOne<Habit>(db, 'SELECT * FROM habits WHERE id = ?', [habitId]);
       
       return res.status(201).json(habit);
     } catch (error) {
@@ -127,8 +123,8 @@ export function createHabitsRouter(db: Database.Database) {
     
     // Check if habit exists and belongs to user
     const existingHabit = queryOne<Habit>(db, `
-      SELECT id FROM habits WHERE id = :habitId AND user_id = :userId
-    `, { habitId, userId });
+      SELECT id FROM habits WHERE id = ? AND user_id = ?
+    `, [habitId, userId]);
     
     if (!existingHabit) {
       return res.status(404).json({ error: 'Habit not found' });
@@ -144,21 +140,15 @@ export function createHabitsRouter(db: Database.Database) {
     try {
       execute(db, `
         UPDATE habits
-        SET name = :name,
-            description = :description,
-            is_active = :isActive,
+        SET name = ?,
+            description = ?,
+            is_active = ?,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = :habitId AND user_id = :userId
-      `, {
-        habitId,
-        userId,
-        name,
-        description: description || null,
-        isActive: isActive ? 1 : 0
-      });
+        WHERE id = ? AND user_id = ?
+      `, [name, description || null, isActive ? 1 : 0, habitId, userId]);
       
       // Get the updated habit
-      const habit = queryOne<Habit>(db, 'SELECT * FROM habits WHERE id = :habitId', { habitId });
+      const habit = queryOne<Habit>(db, 'SELECT * FROM habits WHERE id = ?', [habitId]);
       
       return res.json(habit);
     } catch (error) {
@@ -178,8 +168,8 @@ export function createHabitsRouter(db: Database.Database) {
     
     // Check if habit exists and belongs to user
     const existingHabit = queryOne<Habit>(db, `
-      SELECT id FROM habits WHERE id = :habitId AND user_id = :userId
-    `, { habitId, userId });
+      SELECT id FROM habits WHERE id = ? AND user_id = ?
+    `, [habitId, userId]);
     
     if (!existingHabit) {
       return res.status(404).json({ error: 'Habit not found' });
@@ -187,7 +177,7 @@ export function createHabitsRouter(db: Database.Database) {
     
     // Delete the habit (cascade will delete completions)
     try {
-      execute(db, 'DELETE FROM habits WHERE id = :habitId AND user_id = :userId', { habitId, userId });
+      execute(db, 'DELETE FROM habits WHERE id = ? AND user_id = ?', [habitId, userId]);
       
       return res.status(204).end();
     } catch (error) {
@@ -213,8 +203,8 @@ export function createHabitsRouter(db: Database.Database) {
     
     // Check if habit exists and belongs to user
     const existingHabit = queryOne<Habit>(db, `
-      SELECT id FROM habits WHERE id = :habitId AND user_id = :userId
-    `, { habitId, userId });
+      SELECT id FROM habits WHERE id = ? AND user_id = ?
+    `, [habitId, userId]);
     
     if (!existingHabit) {
       return res.status(404).json({ error: 'Habit not found' });
@@ -225,30 +215,30 @@ export function createHabitsRouter(db: Database.Database) {
         // Check if already completed for this date
         const existingCompletion = queryOne<HabitCompletion>(database, `
           SELECT id FROM habit_completions 
-          WHERE habit_id = :habitId AND completed_date = :date
-        `, { habitId, date });
+          WHERE habit_id = ? AND completed_date = ?
+        `, [habitId, date]);
         
         if (existingCompletion) {
           // Update existing completion
           execute(database, `
             UPDATE habit_completions
-            SET notes = :notes
-            WHERE id = :id
-          `, { id: existingCompletion.id, notes: notes || null });
+            SET notes = ?
+            WHERE id = ?
+          `, [notes || null, existingCompletion.id]);
           
-          const completion = queryOne<HabitCompletion>(database, 'SELECT * FROM habit_completions WHERE id = :id', { id: existingCompletion.id });
+          const completion = queryOne<HabitCompletion>(database, 'SELECT * FROM habit_completions WHERE id = ?', [existingCompletion.id]);
           return completion;
         } else {
           // Create new completion
           execute(database, `
             INSERT INTO habit_completions (habit_id, completed_date, notes)
-            VALUES (:habitId, :date, :notes)
-          `, { habitId, date, notes: notes || null });
+            VALUES (?, ?, ?)
+          `, [habitId, date, notes || null]);
           
           // Get the inserted completion
           const insertResult = database.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
           const completionId = insertResult.id;
-          const completion = queryOne<HabitCompletion>(database, 'SELECT * FROM habit_completions WHERE id = :id', { id: completionId });
+          const completion = queryOne<HabitCompletion>(database, 'SELECT * FROM habit_completions WHERE id = ?', [completionId]);
           
           return completion;
         }
@@ -273,8 +263,8 @@ export function createHabitsRouter(db: Database.Database) {
     
     // Check if habit exists and belongs to user
     const existingHabit = queryOne<Habit>(db, `
-      SELECT id FROM habits WHERE id = :habitId AND user_id = :userId
-    `, { habitId, userId });
+      SELECT id FROM habits WHERE id = ? AND user_id = ?
+    `, [habitId, userId]);
     
     if (!existingHabit) {
       return res.status(404).json({ error: 'Habit not found' });
@@ -284,8 +274,8 @@ export function createHabitsRouter(db: Database.Database) {
     try {
       execute(db, `
         DELETE FROM habit_completions 
-        WHERE habit_id = :habitId AND completed_date = :date
-      `, { habitId, date });
+        WHERE habit_id = ? AND completed_date = ?
+      `, [habitId, date]);
       
       return res.status(204).end();
     } catch (error) {

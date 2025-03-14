@@ -33,9 +33,9 @@ export function createTasksRouter(db: Database.Database) {
     const tasks = query<Task>(db, `
       SELECT id, user_id, title, description, due_date, is_completed, energy_level, created_at, updated_at
       FROM tasks
-      WHERE user_id = :userId
+      WHERE user_id = ?
       ORDER BY due_date, created_at
-    `, { userId });
+    `, [userId]);
     
     return res.json(tasks);
   });
@@ -52,8 +52,8 @@ export function createTasksRouter(db: Database.Database) {
     const task = queryOne<Task>(db, `
       SELECT id, user_id, title, description, due_date, is_completed, energy_level, created_at, updated_at
       FROM tasks
-      WHERE id = :taskId AND user_id = :userId
-    `, { taskId, userId });
+      WHERE id = ? AND user_id = ?
+    `, [taskId, userId]);
     
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
@@ -80,19 +80,13 @@ export function createTasksRouter(db: Database.Database) {
     try {
       execute(db, `
         INSERT INTO tasks (user_id, title, description, due_date, energy_level)
-        VALUES (:userId, :title, :description, :dueDate, :energyLevel)
-      `, {
-        userId,
-        title,
-        description: description || null,
-        dueDate: dueDate || null,
-        energyLevel: energyLevel || null
-      });
+        VALUES (?, ?, ?, ?, ?)
+      `, [userId, title, description || null, dueDate || null, energyLevel || null]);
       
       // Get the inserted task
       const result = db.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
       const taskId = result.id;
-      const task = queryOne<Task>(db, 'SELECT * FROM tasks WHERE id = :taskId', { taskId });
+      const task = queryOne<Task>(db, 'SELECT * FROM tasks WHERE id = ?', [taskId]);
       
       return res.status(201).json(task);
     } catch (error) {
@@ -112,8 +106,8 @@ export function createTasksRouter(db: Database.Database) {
     
     // Check if task exists and belongs to user
     const existingTask = queryOne<Task>(db, `
-      SELECT id FROM tasks WHERE id = :taskId AND user_id = :userId
-    `, { taskId, userId });
+      SELECT id FROM tasks WHERE id = ? AND user_id = ?
+    `, [taskId, userId]);
     
     if (!existingTask) {
       return res.status(404).json({ error: 'Task not found' });
@@ -125,25 +119,17 @@ export function createTasksRouter(db: Database.Database) {
     try {
       execute(db, `
         UPDATE tasks
-        SET title = :title,
-            description = :description,
-            due_date = :dueDate,
-            is_completed = :isCompleted,
-            energy_level = :energyLevel,
+        SET title = ?,
+            description = ?,
+            due_date = ?,
+            is_completed = ?,
+            energy_level = ?,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = :taskId AND user_id = :userId
-      `, {
-        taskId,
-        userId,
-        title,
-        description: description || null,
-        dueDate: dueDate || null,
-        isCompleted: isCompleted ? 1 : 0,
-        energyLevel: energyLevel || null
-      });
+        WHERE id = ? AND user_id = ?
+      `, [title, description || null, dueDate || null, isCompleted ? 1 : 0, energyLevel || null, taskId, userId]);
       
       // Get the updated task
-      const task = queryOne<Task>(db, 'SELECT * FROM tasks WHERE id = :taskId', { taskId });
+      const task = queryOne<Task>(db, 'SELECT * FROM tasks WHERE id = ?', [taskId]);
       
       return res.json(task);
     } catch (error) {
@@ -163,8 +149,8 @@ export function createTasksRouter(db: Database.Database) {
     
     // Check if task exists and belongs to user
     const existingTask = queryOne<Task>(db, `
-      SELECT id FROM tasks WHERE id = :taskId AND user_id = :userId
-    `, { taskId, userId });
+      SELECT id FROM tasks WHERE id = ? AND user_id = ?
+    `, [taskId, userId]);
     
     if (!existingTask) {
       return res.status(404).json({ error: 'Task not found' });
@@ -172,7 +158,7 @@ export function createTasksRouter(db: Database.Database) {
     
     // Delete the task
     try {
-      execute(db, 'DELETE FROM tasks WHERE id = :taskId AND user_id = :userId', { taskId, userId });
+      execute(db, 'DELETE FROM tasks WHERE id = ? AND user_id = ?', [taskId, userId]);
       
       return res.status(204).end();
     } catch (error) {

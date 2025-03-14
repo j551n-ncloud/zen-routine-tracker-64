@@ -41,10 +41,10 @@ function createTables(db: Database.Database): void {
 }
 
 // Execute a query and return all results
-export function query<T>(db: Database.Database, sql: string, params: Record<string, any> = {}): T[] {
+export function query<T>(db: Database.Database, sql: string, params: any[] = []): T[] {
   try {
     const statement = db.prepare(sql);
-    return statement.all(params) as T[];
+    return statement.all(...params) as T[];
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
@@ -52,10 +52,10 @@ export function query<T>(db: Database.Database, sql: string, params: Record<stri
 }
 
 // Execute a query and return the first result
-export function queryOne<T>(db: Database.Database, sql: string, params: Record<string, any> = {}): T | null {
+export function queryOne<T>(db: Database.Database, sql: string, params: any[] = []): T | null {
   try {
     const statement = db.prepare(sql);
-    return statement.get(params) as T || null;
+    return statement.get(...params) as T || null;
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
@@ -63,10 +63,10 @@ export function queryOne<T>(db: Database.Database, sql: string, params: Record<s
 }
 
 // Execute a query for insert/update/delete
-export function execute(db: Database.Database, sql: string, params: Record<string, any> = {}): number {
+export function execute(db: Database.Database, sql: string, params: any[] = []): number {
   try {
     const statement = db.prepare(sql);
-    const result = statement.run(params);
+    const result = statement.run(...params);
     return result.changes;
   } catch (error) {
     console.error('Database execute error:', error);
@@ -76,10 +76,10 @@ export function execute(db: Database.Database, sql: string, params: Record<strin
 
 // Begin a transaction with a callback
 export function transaction<T>(db: Database.Database, cb: (db: Database.Database) => T): T {
-  const transactionFn = db.transaction((db: Database.Database) => {
+  const transactionFn = db.transaction(() => {
     return cb(db);
   });
   
   // Execute the transaction
-  return transactionFn(db);
+  return transactionFn();
 }
