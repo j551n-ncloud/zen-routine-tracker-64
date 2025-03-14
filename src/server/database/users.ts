@@ -1,7 +1,7 @@
 
 import Database from 'better-sqlite3';
 import bcrypt from 'bcrypt';
-import { execute, queryOne } from './db';
+import { query, queryOne, execute } from './db';
 
 export interface User {
   id: number;
@@ -25,14 +25,11 @@ export function createDefaultUser(db: Database.Database): void {
     const passwordHash = bcrypt.hashSync('admin', 10);
     
     // Insert the admin user
-    execute(db, `
-      INSERT INTO users (username, password, is_admin)
-      VALUES (:username, :password, :is_admin)
-    `, {
-      username: 'admin',
-      password: passwordHash,
-      is_admin: 1
-    });
+    execute(db, 
+      `INSERT INTO users (username, password, is_admin)
+       VALUES (?, ?, ?)`,
+      ['admin', passwordHash, 1]
+    );
     
     console.log('Default admin user created successfully (admin/admin)');
   } else {
@@ -42,20 +39,22 @@ export function createDefaultUser(db: Database.Database): void {
 
 // Get user by username
 export function getUserByUsername(db: Database.Database, username: string): (User & { password: string }) | null {
-  return queryOne<User & { password: string }>(db, `
-    SELECT id, username, password, is_admin, created_at, updated_at
-    FROM users
-    WHERE username = :username
-  `, { username });
+  return queryOne<User & { password: string }>(db, 
+    `SELECT id, username, password, is_admin, created_at, updated_at
+     FROM users
+     WHERE username = ?`, 
+    [username]
+  );
 }
 
 // Get user by ID
 export function getUserById(db: Database.Database, id: number): User | null {
-  return queryOne<User>(db, `
-    SELECT id, username, is_admin, created_at, updated_at
-    FROM users
-    WHERE id = :id
-  `, { id });
+  return queryOne<User>(db, 
+    `SELECT id, username, is_admin, created_at, updated_at
+     FROM users
+     WHERE id = ?`, 
+    [id]
+  );
 }
 
 // Create a new user
@@ -64,14 +63,11 @@ export function createUser(db: Database.Database, username: string, password: st
   const passwordHash = bcrypt.hashSync(password, 10);
   
   // Insert the user
-  execute(db, `
-    INSERT INTO users (username, password, is_admin)
-    VALUES (:username, :password, :is_admin)
-  `, {
-    username,
-    password: passwordHash,
-    is_admin: isAdmin ? 1 : 0
-  });
+  execute(db, 
+    `INSERT INTO users (username, password, is_admin)
+     VALUES (?, ?, ?)`,
+    [username, passwordHash, isAdmin ? 1 : 0]
+  );
   
   // Return the created user
   return getUserByUsername(db, username);

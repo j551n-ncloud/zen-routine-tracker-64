@@ -1,5 +1,5 @@
 
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import Database from 'better-sqlite3';
 import { validateCredentials, createUser } from '../database/users';
@@ -10,7 +10,7 @@ export function createAuthRouter(db: Database.Database) {
   const router = Router();
   
   // Login route
-  router.post('/login', (req: Request, res: Response) => {
+  router.post('/login', (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
@@ -47,7 +47,7 @@ export function createAuthRouter(db: Database.Database) {
   });
   
   // Register route
-  router.post('/register', (req: Request, res: Response) => {
+  router.post('/register', (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {

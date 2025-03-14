@@ -6,7 +6,6 @@ import bodyParser from 'body-parser';
 import { createAuthRouter } from './routes/auth';
 import { createUsersRouter } from './routes/users';
 import { createTasksRouter } from './routes/tasks';
-import { createHabitsRouter } from './routes/habits';
 import { initializeDatabase } from './database/db';
 import { createDefaultUser } from './database/users';
 
@@ -16,7 +15,7 @@ createDefaultUser(db);
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Apply middleware
 app.use(cors());
@@ -26,7 +25,6 @@ app.use(bodyParser.json());
 app.use('/api/auth', createAuthRouter(db));
 app.use('/api/users', createUsersRouter(db));
 app.use('/api/tasks', createTasksRouter(db));
-app.use('/api/habits', createHabitsRouter(db));
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
