@@ -1,5 +1,5 @@
 
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import Database from 'better-sqlite3';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { query, queryOne, execute } from '../database/db';
@@ -23,7 +23,7 @@ export function createTasksRouter(db: Database.Database) {
   router.use(authenticate);
   
   // Get all tasks for current user
-  router.get('/', (req: AuthRequest, res) => {
+  router.get('/', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -41,7 +41,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Get a specific task
-  router.get('/:id', (req: AuthRequest, res) => {
+  router.get('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const taskId = parseInt(req.params.id);
     
@@ -63,7 +63,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Create a new task
-  router.post('/', (req: AuthRequest, res) => {
+  router.post('/', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     
     if (!userId) {
@@ -96,7 +96,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Update a task
-  router.put('/:id', (req: AuthRequest, res) => {
+  router.put('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const taskId = parseInt(req.params.id);
     
@@ -139,7 +139,7 @@ export function createTasksRouter(db: Database.Database) {
   });
   
   // Delete a task
-  router.delete('/:id', (req: AuthRequest, res) => {
+  router.delete('/:id', (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const taskId = parseInt(req.params.id);
     
